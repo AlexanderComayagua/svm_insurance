@@ -1,0 +1,88 @@
+{
+    "autor": "Cristopher Alexander Flores Miranda",
+    "cuenta": "20221000321",
+    "features": [
+        "age",
+        "bmi",
+        "children",
+        "charges",
+        "sex",
+        "smoker",
+        "region"
+    ],
+    "cluster_to_risk": {
+        "2": "Bajo",
+        "1": "Medio",
+        "0": "Alto"
+    },
+    "perfiles": {
+        "2": {
+            "Clientes": 587,
+            "Edad_Media": 27.1,
+            "BMI_Medio": 28.81,
+            "Hijos_Medio": 1.0,
+            "Pct_Fumadores": 11.1,
+            "Cargos_Medios": 6399.54,
+            "Nivel_Riesgo": "Bajo"
+        },
+        "1": {
+            "Clientes": 593,
+            "Edad_Media": 51.17,
+            "BMI_Medio": 31.27,
+            "Hijos_Medio": 1.18,
+            "Pct_Fumadores": 10.1,
+            "Cargos_Medios": 12759.11,
+            "Nivel_Riesgo": "Medio"
+        },
+        "0": {
+            "Clientes": 157,
+            "Edad_Media": 39.4,
+            "BMI_Medio": 35.28,
+            "Hijos_Medio": 1.13,
+            "Pct_Fumadores": 94.9,
+            "Cargos_Medios": 40964.97,
+            "Nivel_Riesgo": "Alto"
+        }
+    },
+    "evaluacion_k": [
+        {
+            "k": 2,
+            "Inercia": 5377.22,
+            "Silhouette": 0.185
+        },
+        {
+            "k": 3,
+            "Inercia": 4515.24,
+            "Silhouette": 0.2
+        },
+        {
+            "k": 4,
+            "Inercia": 3778.26,
+            "Silhouette": 0.2207
+        },
+        {
+            "k": 5,
+            "Inercia": 3396.71,
+            "Silhouette": 0.2071
+        },
+        {
+            "k": 6,
+            "Inercia": 3165.37,
+            "Silhouette": 0.1828
+        },
+        {
+            "k": 7,
+            "Inercia": 2974.08,
+            "Silhouette": 0.177
+        },
+        {
+            "k": 8,
+            "Inercia": 2837.95,
+            "Silhouette": 0.1745
+        }
+    ],
+    "varianza_pca": [
+        29.46,
+        20.02
+    ]
+}
