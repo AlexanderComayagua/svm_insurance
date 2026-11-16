@@ -5,6 +5,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
 
 st.set_page_config(page_title="Riesgo Actuarial - K-Means & PCA", page_icon="📊", layout="wide")
 
@@ -15,18 +22,55 @@ KMEANS_PATH = os.path.join(BASE_DIR, "models", "kmeans_riesgo_actuarial.pkl")
 PCA_PATH = os.path.join(BASE_DIR, "models", "pca_riesgo_actuarial.pkl")
 SVM_PATH = os.path.join(BASE_DIR, "models", "svm_riesgo_actuarial.pkl")
 
-@st.cache_resource
-def cargar_artefactos():
-    with open(META_PATH, "r", encoding="utf-8") as f:
-        meta = json.load(f)
-    kmeans_pipe = joblib.load(KMEANS_PATH)
-    pca_mod = joblib.load(PCA_PATH) if os.path.exists(PCA_PATH) else None
-    svm_pipe = joblib.load(SVM_PATH) if os.path.exists(SVM_PATH) else None
-    return meta, kmeans_pipe, pca_mod, svm_pipe
 
 @st.cache_data
 def cargar_datos():
     return pd.read_csv(DATA_PATH).drop_duplicates().reset_index(drop=True)
+
+
+def entrenar_modelos_fallback(df, feature_cols):
+    num_cols = ["age", "bmi", "children", "charges"]
+    cat_cols = ["sex", "smoker", "region"]
+    preprocessor = ColumnTransformer([
+        ("num", StandardScaler(), num_cols),
+        ("cat", OneHotEncoder(drop="first", sparse_output=False), cat_cols)
+    ])
+    X_proc = preprocessor.fit_transform(df[feature_cols])
+
+    kmeans_pipe = Pipeline([
+        ("preprocessor", preprocessor),
+        ("kmeans", KMeans(n_clusters=3, random_state=42, n_init=10))
+    ])
+    clusters = kmeans_pipe.fit_predict(df[feature_cols])
+
+    pca_mod = PCA(n_components=2, random_state=42)
+    pca_mod.fit(X_proc)
+
+    X_train, _, y_train, _ = train_test_split(
+        df[feature_cols], clusters, test_size=0.2, random_state=42, stratify=clusters
+    )
+    svm_pipe = Pipeline([
+        ("preprocessor", preprocessor),
+        ("svm", SVC(kernel="rbf", C=1.0, gamma="scale", probability=True, random_state=42))
+    ])
+    svm_pipe.fit(X_train, y_train)
+    return kmeans_pipe, pca_mod, svm_pipe
+
+
+@st.cache_resource
+def cargar_artefactos():
+    with open(META_PATH, "r", encoding="utf-8") as f:
+        meta = json.load(f)
+    feature_cols = meta.get("features", ["age", "bmi", "children", "charges", "sex", "smoker", "region"])
+    try:
+        kmeans_pipe = joblib.load(KMEANS_PATH)
+        pca_mod = joblib.load(PCA_PATH) if os.path.exists(PCA_PATH) else None
+        svm_pipe = joblib.load(SVM_PATH) if os.path.exists(SVM_PATH) else None
+    except Exception:
+        df_base = pd.read_csv(DATA_PATH).drop_duplicates().reset_index(drop=True)
+        kmeans_pipe, pca_mod, svm_pipe = entrenar_modelos_fallback(df_base, feature_cols)
+    return meta, kmeans_pipe, pca_mod, svm_pipe
+
 
 meta, kmeans_pipe, pca_mod, svm_pipe = cargar_artefactos()
 data = cargar_datos()
